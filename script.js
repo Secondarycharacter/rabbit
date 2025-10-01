@@ -154,7 +154,7 @@ function updateContainerScale() {
   const containerWidth = 2560;
   const containerHeight = 1280;
   
-  // 스케일 계산 (화면에 맞게 축소)
+  // 스케일 계산 (화면에 완전히 맞도록)
   const scaleX = viewportWidth / containerWidth;
   const scaleY = viewportHeight / containerHeight;
   const scale = Math.min(scaleX, scaleY);
@@ -162,7 +162,17 @@ function updateContainerScale() {
   // 스케일 적용
   container.style.transform = `scale(${scale})`;
   
-  console.log(`Container scale updated: ${scale.toFixed(3)} (viewport: ${viewportWidth}x${viewportHeight})`);
+  // 컨테이너가 화면 중앙에 위치하도록 조정
+  const scaledWidth = containerWidth * scale;
+  const scaledHeight = containerHeight * scale;
+  
+  // 화면 중앙에 배치
+  container.style.position = 'absolute';
+  container.style.left = '50%';
+  container.style.top = '50%';
+  container.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  
+  console.log(`Container scale updated: ${scale.toFixed(3)} (viewport: ${viewportWidth}x${viewportHeight}, scaled: ${scaledWidth.toFixed(0)}x${scaledHeight.toFixed(0)})`);
 }
 
 // 페이지가 완전히 로드된 후 초기 위치 저장 및 이미지 위치 계산
