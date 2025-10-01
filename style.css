@@ -1,0 +1,27 @@
+html, body { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; font-family:sans-serif }
+body { background:#f8f9fa; display:flex; justify-content:center; align-items:center; min-height:100vh }
+
+.container { position:relative; width:2560px; height:1280px; transform-origin:center center; transform:scale(calc(min(100vw/2560,100vh/1280))); background:url('images/background.png') no-repeat center center; background-size:cover }
+
+.icon { position:absolute; cursor:grab; transition:all 0.5s ease; user-select:none }
+.icon.dragging { opacity:0.6; cursor:grabbing; z-index:2000; transition:none !important }
+
+.icon.project-screen { z-index:1500 }
+.icon.project-screen.dragging { opacity:0.5 }
+
+.reset-btn { position:absolute; top:20px; right:40px; font-size:20px; cursor:pointer; color:red; z-index:3000; padding:10px 20px; background:white; border:2px solid red; border-radius:5px }
+.reset-btn:hover { background:red; color:white }
+
+.arrow { position:absolute; opacity:0; transition:opacity 0.5s ease; cursor:pointer; z-index:1200 }
+.arrow.show { opacity:1 }
+.arrow-top { transform:scaleY(1) }
+.arrow-bottom { transform:scaleY(1) }
+
+/* 그리드 영역(디버그용, 필요시 주석 처리 가능) */
+.grid-container { position:absolute; top:80px; left:80px; width:2400px; height:1120px; pointer-events:none }
+.grid-cell { position:absolute; width:120px; height:160px; border:0 dashed transparent; pointer-events:none }
+
+@media (max-width:2150px) {
+.icon-af { display:none }
+.arrow-bottom { opacity:1 }
+}

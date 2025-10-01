@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rabbit Homepage - Welcome</title>
+<style>
+html, body { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; font-family:sans-serif }
+body { background:#f8f9fa; display:flex; justify-content:center; align-items:center; min-height:100vh }
+.welcome-container{ text-align:center; background:white; padding:100px; border-radius:20px; box-shadow:0 0 30px rgba(0,0,0,0.3); border:3px solid #007BFF; transform-origin:center center; transform:scale(calc(min(100vw/800,100vh/600))) }
+.welcome-title{ font-size:80px; color:#007BFF; margin-bottom:50px; font-weight:bold }
+.enter-btn{ font-size:60px; padding:30px 80px; background:#007BFF; color:white; border:none; border-radius:15px; cursor:pointer }
+</style>
+</head>
+<body>
+<div class="welcome-container">
+<h1 class="welcome-title">Rabbit Homepage</h1>
+<button class="enter-btn" onclick="enterMainPage()">들어가기</button>
+</div>
+<script>
+function enterMainPage(){ window.location.href='rabbit.html' }
+</script>
+</body>
+</html>
