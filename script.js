@@ -20,7 +20,7 @@ const GRID_START_X = 80;  // 첫 번째 그리드 셀의 시작점
 const GRID_START_Y = 80;
 const MARGIN = 80;
 const CONTAINER_WIDTH = 2560;
-const CONTAINER_HEIGHT = 1280;
+const CONTAINER_HEIGHT = 1440;
 
 // 각 아이콘의 그리드 위치 (인덱스 기반)
 const iconGridPositions = {
@@ -31,6 +31,7 @@ const iconGridPositions = {
   '5': { gridX: 0, gridY: 4 },
   '6': { gridX: 0, gridY: 5 },
   '7': { gridX: 0, gridY: 6 },
+  '8': { gridX: 0, gridY: 7 },
   'A': { gridX: 1, gridY: 0 },  // 두 번째 열, 첫 번째 행
   'B': { gridX: 1, gridY: 1 },
   'C': { gridX: 1, gridY: 2 },
@@ -38,12 +39,13 @@ const iconGridPositions = {
   'E': { gridX: 1, gridY: 4 },
   'F': { gridX: 1, gridY: 5 },
   'G': { gridX: 1, gridY: 6 },
+  'H': { gridX: 1, gridY: 7 },
   'cabinet': { gridX: 19, gridY: 0 },
   'favorites': { gridX: 19, gridY: 1 },
   'manager': { gridX: 19, gridY: 2 },
-  'park': { gridX: 17, gridY: 6 },
-  'yong': { gridX: 16, gridY: 6 },
-  'trash': { gridX: 19, gridY: 6 }
+  'park': { gridX: 17, gridY: 7 },
+  'yong': { gridX: 16, gridY: 7 },
+  'trash': { gridX: 19, gridY: 7 }
 };
 
 // 그리드 좌표를 픽셀 좌표로 변환 (중앙 정렬)
@@ -104,7 +106,7 @@ function applyCalculatedPosition(img, width, height) {
       img.style.top = (40 - height) + 'px';
     } else if (id === 'arrowBottom') {
       img.style.left = (140 - width/2) + 'px';
-      img.style.top = (1240 - height) + 'px';
+      img.style.top = (1400 - height) + 'px';
     }
     return;
   }
@@ -152,7 +154,7 @@ function updateContainerScale() {
   
   // 컨테이너 크기
   const containerWidth = 2560;
-  const containerHeight = 1280;
+  const containerHeight = 1440;
   
   // 스케일 계산 (화면에 완전히 맞도록)
   const scaleX = viewportWidth / containerWidth;
@@ -294,7 +296,7 @@ icons.forEach(icon => {
   icon.addEventListener("mousedown", (e) => {
     if (dragging) return;
     
-    // 반응형 모드에서 1~7, A~G 드래그 비활성화
+    // 반응형 모드에서 1~8, A~H 드래그 비활성화
     if (isResponsive && (icon.classList.contains('icon-left') || icon.classList.contains('icon-af'))) {
       return;
     }
@@ -386,7 +388,7 @@ resetBtn.addEventListener("click", () => {
     }
   });
   
-  // A~G 상태 초기화
+  // A~H 상태 초기화
   afIndex = 0;
   arrowTop.classList.remove("show");
   
@@ -421,7 +423,7 @@ function toggleResponsiveMode(enable) {
   const baseIcons = document.querySelectorAll(".icon:not(.icon-af):not(.icon-right):not(.project-screen)");
   
   if (enable) {
-    // 1~7번 아이콘들을 초기 그리드 위치로 복원
+    // 1~8번 아이콘들을 초기 그리드 위치로 복원
     baseIcons.forEach((icon) => {
       const id = icon.dataset.id;
       const size = imageSizes[id] || { width: 120, height: 160 };
@@ -437,11 +439,11 @@ function toggleResponsiveMode(enable) {
       }
     });
     
-    // A~G 아이콘들을 아래로 이동 (숨김 처리) - gridY: 7 위치
+    // A~H 아이콘들을 아래로 이동 (숨김 처리) - gridY: 7 위치
     afIcons.forEach((icon, index) => {
       const id = icon.dataset.id;
       const size = imageSizes[id] || { width: 120, height: 160 };
-      const pixelPos = gridToPixel(0, 7, size.width, size.height);
+      const pixelPos = gridToPixel(0, 8, size.width, size.height);
       
       icon.style.left = pixelPos.x + 'px';
       icon.style.top = pixelPos.y + 'px';
@@ -468,7 +470,7 @@ function toggleResponsiveMode(enable) {
       }
     });
     
-    // 1~7번도 초기 위치로 복원 - iconGridPositions 사용
+    // 1~8번도 초기 위치로 복원 - iconGridPositions 사용
     baseIcons.forEach((icon) => {
       const id = icon.dataset.id;
       const size = imageSizes[id] || { width: 120, height: 160 };
@@ -490,7 +492,7 @@ function toggleResponsiveMode(enable) {
   }
 }
 
-// 아래쪽 화살표 클릭 (A~G 위로 등장, 1~7 줄어듦)
+// 아래쪽 화살표 클릭 (A~H 위로 등장, 1~8 줄어듦)
 arrowBottom.addEventListener("click", () => {
   const afIcons = document.querySelectorAll(".icon-af");
   const baseIcons = document.querySelectorAll(".icon:not(.icon-af):not(.icon-right):not(.project-screen)");
@@ -508,7 +510,7 @@ arrowBottom.addEventListener("click", () => {
       
       if (index < afIndex) {
         // 이미 등장한 아이콘들 - 한 칸씩 위로 이동
-        const targetGridY = 6 - afIndex + index;
+        const targetGridY = 7 - afIndex + index;
         const pixelPos = gridToPixel(0, targetGridY, size.width, size.height);
         
         icon.style.left = pixelPos.x + 'px';
@@ -518,7 +520,7 @@ arrowBottom.addEventListener("click", () => {
         icon.style.transition = "all 0.5s ease";
       } else if (index === afIndex) {
         // 현재 클릭으로 등장할 아이콘 - gridY: 6에서 페이드인
-        const pixelPos = gridToPixel(0, 6, size.width, size.height);
+        const pixelPos = gridToPixel(0, 7, size.width, size.height);
         
         icon.style.left = pixelPos.x + 'px';
         icon.style.top = pixelPos.y + 'px';
@@ -527,7 +529,7 @@ arrowBottom.addEventListener("click", () => {
         icon.style.transition = "all 0.5s ease";
       } else {
         // 아직 등장하지 않은 아이콘들 - 투명 상태로 gridY: 7에 대기
-        const pixelPos = gridToPixel(0, 7, size.width, size.height);
+        const pixelPos = gridToPixel(0, 8, size.width, size.height);
         
         icon.style.left = pixelPos.x + 'px';
         icon.style.top = pixelPos.y + 'px';
@@ -536,7 +538,7 @@ arrowBottom.addEventListener("click", () => {
       }
     });
     
-    // 1~7번 아이콘들을 한 칸씩 위로 이동
+    // 1~8번 아이콘들을 한 칸씩 위로 이동
     baseIcons.forEach((icon, index) => {
       const id = icon.dataset.id;
       const size = imageSizes[id] || { width: 120, height: 160 };
@@ -563,7 +565,7 @@ arrowBottom.addEventListener("click", () => {
     afIndex++;
   }
   
-  // 모든 A~G가 올라왔으면 위쪽 화살표 표시
+  // 모든 A~H가 올라왔으면 위쪽 화살표 표시
   if (afIndex === afIcons.length) {
     arrowTop.classList.add("show");
   }
@@ -580,13 +582,14 @@ arrowTop.addEventListener("click", () => {
   if (afIndex > 0) {
     afIndex--;
     
-    // 1~7 아이콘들을 순차적으로 이동 (7, 6, 5, 4, 3, 2, 1 순서)
+    // 1~8 아이콘들을 순차적으로 이동 (8, 7, 6, 5, 4, 3, 2, 1 순서)
     baseIcons.forEach((icon, index) => {
       const id = icon.dataset.id;
       const size = imageSizes[id] || { width: 120, height: 160 };
       
-      // afIndex가 감소할 때마다 1~7 아이콘이 하나씩 나타남 (7번부터 역순)
-      // afIndex=7일 때: 아무것도 등장하지 않음
+      // afIndex가 감소할 때마다 1~8 아이콘이 하나씩 나타남 (8번부터 역순)
+      // afIndex=8일 때: 아무것도 등장하지 않음    
+      // afIndex=7일 때: 8번(index 7) 등장
       // afIndex=6일 때: 7번(index 6) 등장
       // afIndex=5일 때: 6번(index 5) 등장
       // afIndex=4일 때: 5번(index 4) 등장
@@ -622,17 +625,17 @@ arrowTop.addEventListener("click", () => {
       }
     });
     
-    // A~G 아이콘들을 등장의 역순으로 이동
+    // A~H 아이콘들을 등장의 역순으로 이동
     afIcons.forEach((icon, index) => {
       const id = icon.dataset.id;
       const size = imageSizes[id] || { width: 120, height: 160 };
       
-      // 등장 순서: A(0), B(1), C(2), D(3), E(4), F(5), G(6)
-      // 사라지는 순서: G(6), F(5), E(4), D(3), C(2), B(1), A(0)
+      // 등장 순서: A(0), B(1), C(2), D(3), E(4), F(5), G(6), H(7)
+      // 사라지는 순서: H(7), G(6), F(5), E(4), D(3), C(2), B(1), A(0)
       
       if (index < afIndex) {
         // 아직 사라지지 않은 아이콘들 - 한 칸씩 아래로 이동
-        const targetGridY = 6 - afIndex + index + 1; // 한 칸씩 아래로 이동
+        const targetGridY = 7 - afIndex + index + 1; // 한 칸씩 아래로 이동
         const pixelPos = gridToPixel(0, targetGridY, size.width, size.height);
         
         icon.style.left = pixelPos.x + 'px';
@@ -640,8 +643,8 @@ arrowTop.addEventListener("click", () => {
         icon.style.opacity = "1";
         icon.style.transition = "all 0.5s ease";
       } else {
-        // 사라진 아이콘들 - gridY: 7로 이동하고 투명 처리
-        const pixelPos = gridToPixel(0, 7, size.width, size.height);
+        // 사라진 아이콘들 - gridY: 8로 이동하고 투명 처리
+        const pixelPos = gridToPixel(0, 8, size.width, size.height);
         
         icon.style.left = pixelPos.x + 'px';
         icon.style.top = pixelPos.y + 'px';
@@ -651,7 +654,7 @@ arrowTop.addEventListener("click", () => {
     });
   }
   
-  // 모든 A~G가 내려갔으면 위쪽 화살표 숨김
+  // 모든 A~H가 내려갔으면 위쪽 화살표 숨김
   if (afIndex === 0) {
     arrowTop.classList.remove("show");
   }
