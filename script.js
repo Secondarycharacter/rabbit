@@ -377,7 +377,7 @@ resetBtn.addEventListener("click", () => {
     // project_screen은 고정 좌표로 초기화
     if (key === 'project') {
       el.style.left = '380px';
-      el.style.top = '80px';
+      el.style.top = '120px';
       el.style.opacity = '1';
       el.style.transform = 'translateY(0)';
     } else if (initialPositions[key]) {
