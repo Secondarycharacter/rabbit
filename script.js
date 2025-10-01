@@ -144,13 +144,36 @@ function loadInitialPositions() {
 // 페이지 로드 시 초기 위치 불러오기
 loadInitialPositions();
 
+// 동적 스케일링 함수
+function updateContainerScale() {
+  const container = document.getElementById('iconContainer');
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  
+  // 컨테이너 크기
+  const containerWidth = 2560;
+  const containerHeight = 1280;
+  
+  // 스케일 계산 (화면에 맞게 축소)
+  const scaleX = viewportWidth / containerWidth;
+  const scaleY = viewportHeight / containerHeight;
+  const scale = Math.min(scaleX, scaleY);
+  
+  // 스케일 적용
+  container.style.transform = `scale(${scale})`;
+  
+  console.log(`Container scale updated: ${scale.toFixed(3)} (viewport: ${viewportWidth}x${viewportHeight})`);
+}
+
 // 페이지가 완전히 로드된 후 초기 위치 저장 및 이미지 위치 계산
 window.addEventListener('load', () => {
   setTimeout(() => {
     calculateImagePositions();
     saveInitialPositions();
+    updateContainerScale(); // 초기 스케일 설정
   }, 100);
 });
+
 
 // 스냅 기능 (마그네틱) - 그리드 안의 이미지 위치 유지
 function snapToGrid(icon) {
@@ -327,8 +350,9 @@ icons.forEach(icon => {
       // 프로젝트 스크린 더블클릭 시 내용 표시 로직
       console.log("Project Screen 더블클릭");
     } else if (icon.classList.contains('icon-right')) {
-      // 오른쪽 아이콘 더블클릭 시 아무 동작 없음
-      console.log(`${icon.dataset.id} 더블클릭 - 동작 없음`);
+      // 오른쪽 아이콘 더블클릭 시 projectScreen에 내용 출력
+      projectScreen.src = `images/project_screen_${icon.dataset.id}.png`;
+      console.log(`${icon.dataset.id} 더블클릭, projectScreen 업데이트`);
     }
   });
 });
@@ -338,14 +362,13 @@ resetBtn.addEventListener("click", () => {
   document.querySelectorAll(".icon").forEach(el => {
     let key = el.dataset?.id || el.id;
     
-    // project_screen은 고정 좌표로 초기화 (그리드 시스템 외부)
+    // project_screen은 고정 좌표로 초기화
     if (key === 'project') {
       el.style.left = '380px';
       el.style.top = '80px';
       el.style.opacity = '1';
       el.style.transform = 'translateY(0)';
     } else if (initialPositions[key]) {
-      // 저장된 초기 위치로 복원 (그리드 시스템 사용)
       el.style.left = initialPositions[key].left;
       el.style.top = initialPositions[key].top;
       el.style.opacity = initialPositions[key].opacity || "1";
@@ -661,7 +684,10 @@ function checkFirstIconPosition() {
 }
 
 // 이벤트 리스너 등록
-window.addEventListener("resize", checkProjectScreenPosition);
+window.addEventListener("resize", () => {
+  updateContainerScale();
+  checkProjectScreenPosition();
+});
 
 // 프로젝트 스크린 위치 체크를 위한 주기적 업데이트
 setInterval(() => {
