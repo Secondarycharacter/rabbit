@@ -1,5 +1,5 @@
 const container = document.getElementById("iconContainer");
-const icons = document.querySelectorAll(".icon");
+const icons = document.querySelectorAll(".icon-wrapper");
 const resetBtn = document.getElementById("resetBtn");
 const arrowTop = document.getElementById("arrowTop");
 const arrowBottom = document.getElementById("arrowBottom");
@@ -87,47 +87,66 @@ function calculateImagePositions() {
 
 // 이미지 위치 적용 (초기 배치)
 function applyCalculatedPosition(img, width, height) {
-  const id = img.dataset?.id || img.id;
+  // img가 icon-wrapper 내부의 이미지인 경우
+  const wrapper = img.closest('.icon-wrapper');
+  const element = wrapper || img;
+  const id = element.dataset?.id || element.id;
+  
+  // 이미지 크기 제한 (원본 크기의 80% 이하로는 줄어들지 않음)
+  const minWidth = Math.max(width * 0.8, 96); // 최소 96px
+  const minHeight = Math.max(height * 0.8, 96); // 최소 96px
+  
+  // 실제 사용할 크기 결정
+  const finalWidth = Math.max(width, minWidth);
+  const finalHeight = Math.max(height, minHeight);
   
   // project_screen은 그리드 시스템 적용하지 않고 고정 좌표 사용
   if (id === 'project') {
-    imageSizes[id] = { width, height };
-    img.style.left = '380px';
-    img.style.top = '80px';
+    imageSizes[id] = { width: finalWidth, height: finalHeight };
+    element.style.width = finalWidth + 'px';
+    element.style.height = finalHeight + 'px';
+    element.style.left = '380px';
+    element.style.top = '120px';
     return;
   }
   
   const gridPos = iconGridPositions[id];
   
   if (!gridPos) {
-    // 화살표 처리
+    // 화살표 처리 (원본 크기 사용)
     if (id === 'arrowTop') {
-      img.style.left = (140 - width/2) + 'px';
-      img.style.top = (40 - height) + 'px';
+      element.style.left = (140 - width/2) + 'px';
+      element.style.top = (70 - height) + 'px';
     } else if (id === 'arrowBottom') {
-      img.style.left = (140 - width/2) + 'px';
-      img.style.top = (1400 - height) + 'px';
+      element.style.left = (140 - width/2) + 'px';
+      element.style.top = (1400 - height) + 'px';
     }
     return;
   }
   
-  imageSizes[id] = { width, height };
+  imageSizes[id] = { width: finalWidth, height: finalHeight };
   
-  const pixelPos = gridToPixel(gridPos.gridX, gridPos.gridY, width, height);
-  img.style.left = pixelPos.x + 'px';
-  img.style.top = pixelPos.y + 'px';
+  // 이미지 크기 설정
+  element.style.width = finalWidth + 'px';
+  element.style.height = finalHeight + 'px';
+  
+  const pixelPos = gridToPixel(gridPos.gridX, gridPos.gridY, finalWidth, finalHeight);
+  element.style.left = pixelPos.x + 'px';
+  element.style.top = pixelPos.y + 'px';
 }
 
 // 초기 위치 저장
 function saveInitialPositions() {
   if (isFirstLoad) {
-    document.querySelectorAll('.icon').forEach(el => {
+    document.querySelectorAll('.icon-wrapper').forEach(el => {
       const key = el.dataset?.id || el.id;
+      const label = el.querySelector('.icon-label');
       initialPositions[key] = {
         left: el.style.left,
         top: el.style.top,
         opacity: el.style.opacity || '1',
-        transform: el.style.transform || 'translateY(0)'
+        transform: el.style.transform || 'translateY(0)',
+        labelText: label ? label.textContent : ''
       };
     });
     localStorage.setItem('rabbitHomepage_initialPositions', JSON.stringify(initialPositions));
@@ -140,11 +159,23 @@ function loadInitialPositions() {
   const saved = localStorage.getItem('rabbitHomepage_initialPositions');
   if (saved) {
     initialPositions = JSON.parse(saved);
+    
+    // 저장된 라벨 텍스트 복원
+    document.querySelectorAll('.icon-wrapper').forEach(el => {
+      const key = el.dataset?.id || el.id;
+      if (initialPositions[key] && initialPositions[key].labelText) {
+        const label = el.querySelector('.icon-label');
+        if (label) {
+          label.textContent = initialPositions[key].labelText;
+        }
+      }
+    });
   }
 }
 
-// 페이지 로드 시 초기 위치 불러오기
-loadInitialPositions();
+// 기존 코드 삭제
+// loadInitialPositions();
+
 
 // 동적 스케일링 함수
 function updateContainerScale() {
@@ -177,12 +208,13 @@ function updateContainerScale() {
   console.log(`Container scale updated: ${scale.toFixed(3)} (viewport: ${viewportWidth}x${viewportHeight}, scaled: ${scaledWidth.toFixed(0)}x${scaledHeight.toFixed(0)})`);
 }
 
-// 페이지가 완전히 로드된 후 초기 위치 저장 및 이미지 위치 계산
+// 페이지가 완전히 로드된 후 초기 위치 불러오기, 저장 및 이미지 위치 계산
 window.addEventListener('load', () => {
   setTimeout(() => {
+    loadInitialPositions(); // 이 위치로 이동
     calculateImagePositions();
     saveInitialPositions();
-    updateContainerScale(); // 초기 스케일 설정
+    updateContainerScale();
   }, 100);
 });
 
@@ -220,7 +252,7 @@ function snapToGrid(icon) {
 
 // 충돌 감지 (그리드 기반)
 function checkCollision(gridX, gridY, spanX = 1, spanY = 1, excludeIcon = null) {
-  for (let icon of document.querySelectorAll('.icon')) {
+  for (let icon of document.querySelectorAll('.icon-wrapper')) {
     if (icon === excludeIcon) continue;
     if (icon.classList.contains('project-screen')) continue;
     
@@ -292,8 +324,17 @@ function preventOverlap(draggedIcon) {
 }
 
 // 아이콘 드래그 기능
-icons.forEach(icon => {
+console.log('총 아이콘 개수:', icons.length);
+icons.forEach((icon, index) => {
+  console.log(`아이콘 ${index + 1}:`, icon.dataset.id, icon.classList.toString());
+  
   icon.addEventListener("mousedown", (e) => {
+    if (e.target.classList.contains('icon-label') || 
+        e.target.closest('.icon-label')) {
+      console.log('레이블 클릭 감지 - 드래그 방지');
+      return; // 드래그 시작하지 않음
+    }
+    
     if (dragging) return;
     
     // 반응형 모드에서 1~8, A~H 드래그 비활성화
@@ -369,9 +410,146 @@ icons.forEach(icon => {
   });
 });
 
+// 레이블 편집 기능을 모든 아이콘에 독립적으로 적용
+function setupLabelEditing() {
+  // 모든 레이블에 직접 접근
+  const allLabels = document.querySelectorAll('.icon-label');
+  
+  console.log(`총 ${allLabels.length}개의 레이블 발견`);
+  
+  allLabels.forEach((label, index) => {
+    const parentIcon = label.closest('.icon-wrapper');
+    const id = parentIcon?.dataset?.id || 'unknown';
+    
+    // 기존 이벤트 제거 후 새로 등록
+    const newLabel = label.cloneNode(true);
+    label.parentNode.replaceChild(newLabel, label);
+    
+    // 새 레이블에 이벤트 등록
+    newLabel.addEventListener("dblclick", handleLabelDoubleClick);
+    newLabel.style.cursor = 'text';
+    newLabel.style.pointerEvents = 'auto';
+    newLabel.style.zIndex = '10';
+    
+    console.log(`레이블 ${index + 1} (${id}): 이벤트 등록 완료`);
+  });
+}
+
+// 레이블 더블클릭 핸들러 함수
+function handleLabelDoubleClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  const label = e.currentTarget; // e.target 대신 e.currentTarget 사용
+  console.log('레이블 더블클릭:', label.textContent);
+  
+  const originalText = label.textContent;
+  
+  // 편집 모드 활성화
+  label.contentEditable = true;
+  label.focus();
+  label.style.background = 'rgba(255, 255, 255, 0.95)';
+  label.style.userSelect = 'text';
+  label.style.border = '2px solid #007BFF';
+  label.style.cursor = 'text';
+  
+  // 전체 텍스트 선택
+  setTimeout(() => {
+    const range = document.createRange();
+    range.selectNodeContents(label);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }, 0);
+  
+  const finishEdit = () => {
+    console.log('편집 완료:', label.textContent);
+    if (label.textContent.trim() === '') {
+      label.textContent = originalText;
+    }
+    label.contentEditable = false;
+    label.style.background = 'transparent';
+    label.style.userSelect = 'none';
+    label.style.border = '1px solid transparent';
+    label.style.cursor = 'text'; // 여전히 편집 가능하다는 표시
+  };
+  
+  // 이벤트 리스너 - once 옵션으로 한 번만 실행
+  label.addEventListener('blur', finishEdit, { once: true });
+  label.addEventListener('keydown', function keyHandler(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      label.removeEventListener('keydown', keyHandler);
+      finishEdit();
+    }
+    if (e.key === 'Escape') {
+      label.textContent = originalText;
+      label.removeEventListener('keydown', keyHandler);
+      finishEdit();
+    }
+  });
+}
+
+// 페이지 로드 시 레이블 편집 기능 설정
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    setupLabelEditing(); // 레이블 편집 기능 먼저 설정
+  }, 300); // 200ms에서 300ms로 변경하여 DOM이 완전히 로드되도록
+});
+
+// 프로젝트 스크린 드래그 기능 (별도 처리)
+projectScreen.addEventListener("mousedown", (e) => {
+  if (dragging) return;
+  
+  e.preventDefault();
+  
+  dragging = projectScreen;
+  startX = e.clientX;
+  startY = e.clientY;
+  origX = parseInt(projectScreen.style.left);
+  origY = parseInt(projectScreen.style.top);
+  projectScreen.classList.add("dragging");
+  
+  // 드래그 중에는 transition 비활성화하여 부드러운 움직임
+  projectScreen.style.transition = "none";
+
+  const onMouseMove = (e) => {
+    // 마우스 이동 거리만큼 아이콘 이동 (1:1 비율)
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    
+    const newX = origX + deltaX;
+    const newY = origY + deltaY;
+    
+    // 프로젝트 스크린은 화면 경계 체크만 적용 (그리드 스냅 없음)
+    const iconWidth = projectScreen.naturalWidth || 1800;
+    const iconHeight = projectScreen.naturalHeight || 1100;
+
+    const boundedX = Math.max(0, Math.min(newX, CONTAINER_WIDTH - iconWidth));
+    const boundedY = Math.max(0, Math.min(newY, CONTAINER_HEIGHT - iconHeight));
+    
+    projectScreen.style.left = boundedX + "px";
+    projectScreen.style.top = boundedY + "px";
+  };
+
+  const onMouseUp = (e) => {
+    projectScreen.classList.remove("dragging");
+    
+    // transition 복원
+    projectScreen.style.transition = "all 0.5s ease";
+    
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+    dragging = null;
+  };
+
+  document.addEventListener("mousemove", onMouseMove);
+  document.addEventListener("mouseup", onMouseUp);
+});
+
 // 초기화 버튼
 resetBtn.addEventListener("click", () => {
-  document.querySelectorAll(".icon").forEach(el => {
+  document.querySelectorAll(".icon-wrapper").forEach(el => {
     let key = el.dataset?.id || el.id;
     
     // project_screen은 고정 좌표로 초기화
@@ -385,6 +563,12 @@ resetBtn.addEventListener("click", () => {
       el.style.top = initialPositions[key].top;
       el.style.opacity = initialPositions[key].opacity || "1";
       el.style.transform = initialPositions[key].transform || "translateY(0)";
+      
+      // 라벨 텍스트 복원
+      const label = el.querySelector('.icon-label');
+      if (label && initialPositions[key].labelText) {
+        label.textContent = initialPositions[key].labelText;
+      }
     }
   });
   
@@ -408,19 +592,23 @@ function checkProjectScreenPosition() {
   const grid0Start = GRID_START_X; // 80px
   const grid1End = GRID_START_X + (2 * GRID_X); // 80 + (2 * 120) = 320px
   
+  console.log(`Project screen position check: x=${projectX}, grid0Start=${grid0Start}, grid1End=${grid1End}, isResponsive=${isResponsive}`);
+  
   if (projectX >= grid0Start && projectX <= grid1End && !isResponsive) {
     isResponsive = true;
     toggleResponsiveMode(true);
+    console.log('Entering responsive mode');
   } else if ((projectX < grid0Start || projectX > grid1End) && isResponsive) {
     isResponsive = false;
     toggleResponsiveMode(false);
+    console.log('Exiting responsive mode');
   }
 }
 
 // 반응형 모드 토글
 function toggleResponsiveMode(enable) {
-  const afIcons = document.querySelectorAll(".icon-af");
-  const baseIcons = document.querySelectorAll(".icon:not(.icon-af):not(.icon-right):not(.project-screen)");
+  const afIcons = document.querySelectorAll(".icon-wrapper.icon-af");
+  const baseIcons = document.querySelectorAll(".icon-wrapper:not(.icon-af):not(.icon-right):not(.project-screen)");
   
   if (enable) {
     // 1~8번 아이콘들을 초기 그리드 위치로 복원
@@ -439,7 +627,7 @@ function toggleResponsiveMode(enable) {
       }
     });
     
-    // A~H 아이콘들을 아래로 이동 (숨김 처리) - gridY: 7 위치
+    // A~H 아이콘들을 아래로 이동 (숨김 처리) - gridY: 8 위치
     afIcons.forEach((icon, index) => {
       const id = icon.dataset.id;
       const size = imageSizes[id] || { width: 120, height: 160 };
@@ -490,12 +678,17 @@ function toggleResponsiveMode(enable) {
     arrowTop.classList.remove("show");
     afIndex = 0;
   }
+  
+  // 반응형 모드 변경 후 레이블 편집 기능 다시 설정
+  setTimeout(() => {
+    setupLabelEditing();
+  }, 100);
 }
 
 // 아래쪽 화살표 클릭 (A~H 위로 등장, 1~8 줄어듦)
 arrowBottom.addEventListener("click", () => {
-  const afIcons = document.querySelectorAll(".icon-af");
-  const baseIcons = document.querySelectorAll(".icon:not(.icon-af):not(.icon-right):not(.project-screen)");
+  const afIcons = document.querySelectorAll(".icon-wrapper.icon-af");
+  const baseIcons = document.querySelectorAll(".icon-wrapper:not(.icon-af):not(.icon-right):not(.project-screen)");
   
   // 화살표의 아래쪽 y좌표 계산 (동적으로)
   const arrowTopRect = arrowTop.getBoundingClientRect();
@@ -503,7 +696,7 @@ arrowBottom.addEventListener("click", () => {
   const arrowTopBottomY = arrowTopRect.bottom - containerRect.top;
 
   if (afIndex < afIcons.length) {
-    // A~G 아이콘들을 순차적으로 이동
+    // A~H 아이콘들을 순차적으로 이동
     afIcons.forEach((icon, index) => {
       const id = icon.dataset.id;
       const size = imageSizes[id] || { width: 120, height: 160 };
@@ -528,7 +721,7 @@ arrowBottom.addEventListener("click", () => {
         icon.style.display = "block";
         icon.style.transition = "all 0.5s ease";
       } else {
-        // 아직 등장하지 않은 아이콘들 - 투명 상태로 gridY: 7에 대기
+        // 아직 등장하지 않은 아이콘들 - 투명 상태로 gridY: 8에 대기
         const pixelPos = gridToPixel(0, 8, size.width, size.height);
         
         icon.style.left = pixelPos.x + 'px';
@@ -576,8 +769,8 @@ arrowBottom.addEventListener("click", () => {
 
 // 위쪽 화살표 클릭 (되돌리기)
 arrowTop.addEventListener("click", () => {
-  const afIcons = document.querySelectorAll(".icon-af");
-  const baseIcons = document.querySelectorAll(".icon:not(.icon-af):not(.icon-right):not(.project-screen)");
+  const afIcons = document.querySelectorAll(".icon-wrapper.icon-af");
+  const baseIcons = document.querySelectorAll(".icon-wrapper:not(.icon-af):not(.icon-right):not(.project-screen)");
 
   if (afIndex > 0) {
     afIndex--;
@@ -665,7 +858,7 @@ arrowTop.addEventListener("click", () => {
 
 // 1번 아이콘이 { gridX: 0, gridY: 0 } 위치에 있지 않은 경우 arrowTop 표시
 function checkFirstIconPosition() {
-  const firstIcon = document.querySelector('.icon[data-id="1"]');
+  const firstIcon = document.querySelector('.icon-wrapper[data-id="1"]');
   
   if (!firstIcon) {
     console.log("1번 아이콘을 찾을 수 없습니다.");
